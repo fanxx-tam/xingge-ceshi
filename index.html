@@ -266,6 +266,33 @@
     to { opacity: 1; transform: translateY(0); }
   }
   .fade-in { animation: fadeIn 0.3s ease forwards; }
+
+  /* 橱窗小广告 */
+  .shop-ad {
+    display: block;
+    position: relative;
+    margin-top: 20px;
+    border-radius: 12px;
+    overflow: hidden;
+    opacity: 0.95;
+    transition: opacity 0.2s;
+  }
+  .shop-ad img {
+    width: 100%;
+    display: block;
+    border-radius: 12px;
+  }
+  .shop-ad .ad-tag {
+    position: absolute;
+    top: 8px;
+    right: 8px;
+    background: rgba(240,192,64,0.9);
+    color: #1a1a2e;
+    font-size: 11px;
+    padding: 3px 10px;
+    border-radius: 50px;
+    font-weight: 700;
+  }
 </style>
 </head>
 <body>
@@ -463,6 +490,16 @@ function renderQuestion() {
   q.options.forEach((opt, i) => {
     html += `<div class="option" onclick="selectOption(this, ${opt.score})">${String.fromCharCode(65 + i)}. ${opt.text}</div>`;
   });
+
+
+  // 小广告位（答题页底部）
+  if (currentQ < totalQuestions) {
+    html += `
+    <a href="javascript:void(0)" onclick="this.style.opacity='0.8'" class="shop-ad">
+      <img src="shop_ad.jpg" alt="熊家子弟橱窗" />
+      <span class="ad-tag">🛒 橱窗好物</span>
+    </a>`;
+  }
 
   html += `</div>`;
   document.getElementById('questionContainer').innerHTML = html;
