@@ -1,0 +1,642 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+<title>测测你的"性格攻受"分数（0-1分制）</title>
+<style>
+  * { box-sizing: border-box; margin: 0; padding: 0; }
+  body {
+    font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", "PingFang SC", "Hiragino Sans GB", "Microsoft YaHei", sans-serif;
+    background: linear-gradient(135deg, #1a1a2e 0%, #16213e 50%, #0f3460 100%);
+    color: #e0e0e0;
+    min-height: 100vh;
+    overflow-x: hidden;
+  }
+  .container {
+    max-width: 420px;
+    margin: 0 auto;
+    padding: 20px 16px 40px;
+  }
+
+  /* 开始页 */
+  .start-page { text-align: center; padding-top: 60px; }
+  .start-page .emoji { font-size: 64px; margin-bottom: 20px; }
+  .start-page h1 {
+    font-size: 22px; font-weight: 700;
+    color: #f0c040; margin-bottom: 12px; line-height: 1.4;
+  }
+  .start-page .subtitle { font-size: 14px; color: #a0a0b0; margin-bottom: 8px; line-height: 1.6; }
+  .start-page .notice {
+    background: rgba(255,255,255,0.06); border-radius: 10px;
+    padding: 14px 16px; font-size: 13px; color: #888;
+    margin-bottom: 36px; line-height: 1.6; text-align: left;
+  }
+  .start-page .notice strong { color: #f0c040; }
+  .btn {
+    display: inline-block;
+    background: linear-gradient(135deg, #f0c040, #f09030);
+    color: #1a1a2e; font-size: 16px; font-weight: 700;
+    padding: 14px 48px; border-radius: 50px;
+    border: none; cursor: pointer; transition: transform 0.15s;
+  }
+  .btn:active { transform: scale(0.96); }
+
+  /* 进度条 */
+  .progress-bar {
+    height: 4px; background: rgba(255,255,255,0.1);
+    border-radius: 2px; margin-bottom: 20px; overflow: hidden;
+  }
+  .progress-fill {
+    height: 100%; background: linear-gradient(90deg, #f0c040, #f09030);
+    border-radius: 2px; transition: width 0.3s ease;
+  }
+  .progress-text { text-align: right; font-size: 12px; color: #666; margin-bottom: 8px; }
+
+  /* 题目页 */
+  .question-page { display: none; }
+  .question-page.active { display: block; }
+  .question-number { font-size: 12px; color: #f0c040; margin-bottom: 8px; font-weight: 600; }
+  .question-text { font-size: 17px; font-weight: 600; line-height: 1.6; margin-bottom: 24px; color: #e8e8e8; }
+  .option {
+    background: rgba(255,255,255,0.06); border: 1.5px solid rgba(255,255,255,0.1);
+    border-radius: 12px; padding: 14px 16px; margin-bottom: 12px;
+    font-size: 15px; line-height: 1.5; cursor: pointer; transition: all 0.15s; color: #c8c8d0;
+  }
+  .option:active, .option.selected {
+    background: rgba(240,192,64,0.12); border-color: #f0c040; color: #f0c040;
+  }
+
+  /* 结果页 */
+  .result-page { display: none; }
+  .result-page.active { display: block; }
+
+  /* 分数展示 */
+  .score-display {
+    text-align: center;
+    background: rgba(255,255,255,0.06);
+    border-radius: 20px;
+    padding: 24px 16px;
+    margin-bottom: 20px;
+  }
+  .score-number {
+    font-size: 72px; font-weight: 900; line-height: 1;
+    background: linear-gradient(135deg, #f0c040, #f09030);
+    -webkit-background-clip: text; -webkit-text-fill-color: transparent;
+    margin-bottom: 8px;
+  }
+  .score-label { font-size: 14px; color: #888; }
+
+  /* 性格类型卡片 */
+  .type-card {
+    border-radius: 16px;
+    padding: 20px;
+    margin-bottom: 20px;
+    line-height: 1.8;
+  }
+  .type-card.green  { background: rgba(80,200,120,0.12); border: 1.5px solid rgba(80,200,120,0.3); }
+  .type-card.yellow { background: rgba(240,200,60,0.12);  border: 1.5px solid rgba(240,200,60,0.3); }
+  .type-card.blue   { background: rgba(80,160,240,0.12);  border: 1.5px solid rgba(80,160,240,0.3); }
+  .type-card.orange { background: rgba(240,160,60,0.12);  border: 1.5px solid rgba(240,160,60,0.3); }
+  .type-card.red    { background: rgba(240,80,80,0.12);   border: 1.5px solid rgba(240,80,80,0.3); }
+
+  .type-header {
+    font-size: 20px; font-weight: 800; margin-bottom: 8px;
+    display: flex; align-items: center; gap: 8px;
+  }
+  .type-header .dot {
+    width: 12px; height: 12px; border-radius: 50%; display: inline-block;
+  }
+  .type-header .dot.green  { background: #50c878; }
+  .type-header .dot.yellow { background: #f0c83c; }
+  .type-header .dot.blue   { background: #50a0f0; }
+  .type-header .dot.orange { background: #f0a03c; }
+  .type-header .dot.red    { background: #f05050; }
+  .type-desc { font-size: 14px; color: #b0b0c0; line-height: 1.7; }
+
+  /* 角色卡片 */
+  .role-section { margin-bottom: 16px; }
+  .role-section-title {
+    font-size: 15px; font-weight: 700; margin-bottom: 12px;
+    color: #d0d0d0; padding-left: 4px;
+    border-left: 3px solid #f0c040;
+  }
+  .role-card {
+    border-radius: 14px;
+    padding: 16px;
+    margin-bottom: 10px;
+    background: rgba(255,255,255,0.04);
+    border: 1px solid rgba(255,255,255,0.08);
+  }
+  .role-card-tag {
+    font-size: 14px; font-weight: 800; margin-bottom: 6px;
+    display: flex; align-items: center; gap: 6px;
+  }
+  .role-card-tag .role-dot {
+    width: 8px; height: 8px; border-radius: 50%; display: inline-block;
+  }
+  .role-card-tag .role-dot.r0    { background: #c080f0; }
+  .role-card-tag .role-dot.r05   { background: #80c0f0; }
+  .role-card-tag .role-dot.r1    { background: #f0a050; }
+  .role-card-text { font-size: 13px; color: #a0a0b0; line-height: 1.7; }
+
+  /* 免责声明 */
+  .disclaimer {
+    text-align: center;
+    font-size: 11px; color: #555;
+    margin-top: 16px;
+    padding: 12px 16px;
+    border-radius: 10px;
+    background: rgba(255,255,255,0.03);
+    line-height: 1.6;
+  }
+
+  /* 分享卡片（用于截图） */
+  .share-card {
+    width: 340px;
+    background: #16213e;
+    border-radius: 20px;
+    padding: 28px 24px 20px;
+    color: #e0e0e0;
+    position: fixed;
+    left: -9999px;
+    top: -9999px;
+    z-index: -1;
+    border: 2px solid #f0c040;
+  }
+  .share-card-header {
+    text-align: center;
+    margin-bottom: 16px;
+  }
+  .share-card-emoji { font-size: 36px; margin-bottom: 8px; }
+  .share-card-title {
+    font-size: 18px; font-weight: 800;
+    color: #f0c040;
+  }
+  .share-card-score {
+    text-align: center;
+    font-size: 56px; font-weight: 900;
+    color: #f0c040;
+    margin: 12px 0 4px;
+  }
+  .share-card-type {
+    text-align: center;
+    font-size: 15px; font-weight: 700;
+    margin-bottom: 8px;
+    color: #e8e8e8;
+  }
+  .share-card-desc {
+    text-align: center;
+    font-size: 12px; color: #a0a0b0;
+    line-height: 1.6;
+    margin-bottom: 16px;
+    padding: 0 8px;
+  }
+  .share-card-divider {
+    height: 1px;
+    background: #f0c040;
+    margin: 12px 0 14px;
+  }
+  .share-card-qr {
+    text-align: center;
+  }
+  .share-card-qr img {
+    width: 80px; height: 80px;
+    background: #fff; border-radius: 8px; padding: 4px;
+  }
+  .share-card-qr-text {
+    font-size: 11px; color: #f0c040;
+    margin-top: 6px; font-weight: 700;
+  }
+  .share-card-footer {
+    text-align: center;
+    font-size: 10px; color: #666;
+    margin-top: 10px;
+  }
+
+  /* 二维码关注区域 */
+  .qr-section {
+    text-align: center;
+    padding: 20px 16px 24px;
+    margin-top: 8px;
+    border-radius: 14px;
+    background: rgba(255,255,255,0.04);
+    border: 1px solid rgba(240,192,64,0.2);
+  }
+  .qr-section .qr-title { font-size: 13px; color: #f0c040; margin-bottom: 10px; font-weight: 700; }
+  .qr-section .qr-img {
+    width: 120px; height: 120px; border-radius: 10px;
+    background: #fff; padding: 6px;
+    display: inline-block;
+  }
+  .qr-section .qr-hint { font-size: 11px; color: #777; margin-top: 8px; }
+
+  /* 分享按钮 */
+  .share-btn {
+    display: block; width: 100%; margin-top: 12px; margin-bottom: 4px;
+    background: linear-gradient(135deg, #50c878, #30a850);
+    color: #fff; font-size: 15px; font-weight: 700;
+    padding: 14px; border-radius: 50px;
+    border: none; cursor: pointer; transition: transform 0.15s;
+  }
+  .share-btn:active { transform: scale(0.96); }
+
+  /* 截图预览遮罩 */
+  .share-overlay {
+    position: fixed; top: 0; left: 0; width: 100%; height: 100%;
+    background: rgba(0,0,0,0.85); z-index: 9999;
+    display: flex; flex-direction: column; align-items: center;
+    justify-content: center; padding: 20px;
+  }
+  .share-overlay img {
+    max-width: 380px; width: 100%; border-radius: 12px;
+    box-shadow: 0 8px 32px rgba(0,0,0,0.5);
+  }
+  .share-overlay .share-tip {
+    color: #aaa; font-size: 13px; margin-top: 20px; text-align: center;
+  }
+  .share-overlay .close-overlay {
+    margin-top: 20px; padding: 10px 36px; border-radius: 50px;
+    background: rgba(255,255,255,0.1); color: #ccc; border: 1px solid rgba(255,255,255,0.2);
+    font-size: 14px; cursor: pointer;
+  }
+
+  @keyframes fadeIn {
+    from { opacity: 0; transform: translateY(12px); }
+    to { opacity: 1; transform: translateY(0); }
+  }
+  .fade-in { animation: fadeIn 0.3s ease forwards; }
+</style>
+</head>
+<body>
+<div class="container">
+
+  <!-- 开始页 -->
+  <div class="start-page" id="startPage">
+    <div class="emoji">🐻</div>
+    <h1>测测你的真实性格类型</h1>
+    <div class="subtitle">10题，凭第一感觉选，不要想太多</div>
+    <div class="notice">
+      每个人的性格里都有不同的面向，<br>
+      有的人主动，有的人被动，有的人随遇而安。<br><br>
+      做完测试，你会看到一个专属你的性格分析结果。<br>
+      <strong>温馨提示：</strong>没有标准答案，最真实的你就在你的第一反应里 ✨
+    </div>
+    <button class="btn" onclick="startTest()">开始测试</button>
+  </div>
+
+  <!-- 题目页 -->
+  <div id="questionContainer"></div>
+
+  <!-- 结果页 -->
+  <div class="result-page" id="resultPage"></div>
+
+</div>
+
+<!-- html2canvas 截图库 -->
+<script src="https://cdn.jsdelivr.net/npm/html2canvas@1.4.1/dist/html2canvas.min.js"></script>
+
+<script>
+// Q1-Q10：计分题，每题 score 为 0 / 0.5 / 1
+const questions = [
+  {
+    q: "周末晚上，crush突然发消息说「在干嘛，出来喝一杯？」，你：",
+    options: [
+      { text: "秒回「在哪，10分钟到」", score: 1 },
+      { text: "回「好啊，不过我可能晚一点到」", score: 0.5 },
+      { text: "先问清楚有谁、在哪、几个人，再决定", score: 0 }
+    ]
+  },
+  {
+    q: "你最常挂在嘴边的口头禅是？",
+    options: [
+      { text: "「妈呀大姐」", score: 0 },
+      { text: "很少说口头禅，说话比较温和", score: 0.5 },
+      { text: "「我艹」/「靠」", score: 1 }
+    ]
+  },
+  {
+    q: "聊天时，对方说了一句让你有点不舒服的话，你：",
+    options: [
+      { text: "直接说「你这话我不爱听」", score: 1 },
+      { text: "当下就表达出来，但语气尽量温和", score: 0.5 },
+      { text: "先忍着，回去之后慢慢消化", score: 0 }
+    ]
+  },
+  {
+    q: "突然被吓到的时候，你的第一反应是？",
+    options: [
+      { text: "尖声大叫 / 跳起来", score: 0 },
+      { text: "「靠！」/ 骂一句", score: 0.5 },
+      { text: "冷静地说「你干嘛」", score: 1 }
+    ]
+  },
+  {
+    q: "出门前会花时间在打扮上吗？",
+    options: [
+      { text: "必须化妆/打理，素颜不出门", score: 0 },
+      { text: "看场合，重要的场合会认真打扮", score: 0.5 },
+      { text: "随便弄弄，自然最好", score: 1 }
+    ]
+  },
+  {
+    q: "吵架之后，你通常是：",
+    options: [
+      { text: "先道歉，哪怕不是我的错", score: 1 },
+      { text: "等对方先开口", score: 0 },
+      { text: "冷静下来之后主动沟通", score: 0.5 }
+    ]
+  },
+  {
+    q: "发朋友圈照片，你更喜欢哪种风格？",
+    options: [
+      { text: "精心修图，滤镜必须拉满", score: 0 },
+      { text: "自然原图，稍微调一下亮度", score: 0.5 },
+      { text: "直出，不怎么P图", score: 1 }
+    ]
+  },
+  {
+    q: "朋友对你最常说的一句评价是？",
+    options: [
+      { text: "「你人真好 / 太温柔了」", score: 0 },
+      { text: "「你挺有个性的」", score: 0.5 },
+      { text: "「你气场好强 / 好有主见」", score: 1 }
+    ]
+  },
+  {
+    q: "朋友送你一份礼物，你的第一反应是？",
+    options: [
+      { text: "「哇！好喜欢！爱你！」", score: 0 },
+      { text: "「谢谢～」", score: 0.5 },
+      { text: "「这东西多少钱，我转你」", score: 1 }
+    ]
+  },
+  {
+    q: "你在一段关系里，更希望：",
+    options: [
+      { text: "由我来主导，对方配合就好", score: 1 },
+      { text: "对方主导，我跟着走", score: 0 },
+      { text: "两个人一起商量，没有固定的主导者", score: 0.5 }
+    ]
+  }
+];
+
+// 结果映射：根据分数档位，给出性格类型 + 三种角色（0/0.5/1）的描述
+const resultMap = {
+  '0-0.2': {
+    color: 'green', dotColor: '#50c878',
+    emoji: '🍑', title: '需要人陪的"小甜椒"',
+    desc: '性格非常软萌、依赖人，是个需要被宠着、被照顾的小宝贝。',
+    roles: [
+      { tag: '【天生一对】如果你是 0', roleClass: 'r0', text: '性格软萌，型号也合适。天生就是用来被老攻捧在手心里宠的，负责可爱就完事了！' },
+      { tag: '【被迫营业】如果你是 0.5', roleClass: 'r05', text: '虽然偶尔想在上面，但因为性格太温柔，只要对方一撒娇，你秒变打工人，根本硬气不起来。' },
+      { tag: '【反差天花板】如果你是 1', roleClass: 'r1', text: '超级神奇的组合！平时像个小奶狗一样黏人，结果一到关键时刻竟然是负责输出的那个，反差萌爆表！' }
+    ]
+  },
+  '0.3-0.4': {
+    color: 'yellow', dotColor: '#f0c83c',
+    emoji: '🐱', title: '嘴硬心软的"小傲娇"',
+    desc: '表面上喜欢放狠话、装坚强，实际上只要一抱抱，一秒就变温顺。',
+    roles: [
+      { tag: '【傲娇女王】如果你是 0', roleClass: 'r0', text: '嘴上嫌弃"你烦不烦"，身体却很诚实。最享受一边嘴硬，一边被大总攻死死拿捏的感觉。' },
+      { tag: '【看心情切花】如果你是 0.5', roleClass: 'r05', text: '今天跟你吵架赢了，我就要在上面；今天被你哄开心了，我就在下面。型号完全看心情。' },
+      { tag: '【别扭大狼狗】如果你是 1', roleClass: 'r1', text: '明明生理上是1，却特别需要人顺毛。会一边帮你剥虾，一边扭过头说："顺手剥的，爱吃不吃！"' }
+    ]
+  },
+  '0.5': {
+    color: 'blue', dotColor: '#50a0f0',
+    emoji: '☯️', title: '随缘切花的"万能型"',
+    desc: '性格成熟独立，追求平等。既能照顾人，也能被照顾。',
+    roles: [
+      { tag: '【独立强受】如果你是 0', roleClass: 'r0', text: '虽然在下面，但生活里是个能搞定一切的独立大先生。白天并肩作战，晚上温柔顺从。' },
+      { tag: '【神仙伴侣】如果你是 0.5', roleClass: 'r05', text: '最完美的境界。性格不设限，型号不封顶。今天我当攻，明天我当受，谈一场恋爱体验两种人生！' },
+      { tag: '【暖男绅士】如果你是 1', roleClass: 'r1', text: '虽然是1，但完全没有大男子主义。尊重你、体贴你，是让人极有安全感的温柔大哥哥。' }
+    ]
+  },
+  '0.6-0.7': {
+    color: 'orange', dotColor: '#f0a03c',
+    emoji: '🐺', title: '温柔腹黑的"大灰狼"',
+    desc: '看着脾气很好，实际上非常有主见，擅长用温柔把对方"套路"住。',
+    roles: [
+      { tag: '【腹黑诱受】如果你是 0', roleClass: 'r0', text: '段位极高！虽然生理在下，但其实你用智商和心机掌控着全局。老攻还以为征服了你，其实是在陪你演戏。' },
+      { tag: '【扮猪吃老虎】如果你是 0.5', roleClass: 'r05', text: '想当攻的时候把你哄得找不着北，想当受的时候秒示弱。对方完全被你玩弄在股掌之间。' },
+      { tag: '【爹系老攻】如果你是 1', roleClass: 'r1', text: '最会疼人的1。不会粗暴命令你，而是用无微不至的溺爱把你宠成废人，让你这辈子都离不开他。' }
+    ]
+  },
+  '0.8-1.0': {
+    color: 'red', dotColor: '#f05050',
+    emoji: '👑', title: '气场强大的"大总攻"',
+    desc: '非常有大哥风范，占有欲和责任感爆棚，习惯了掌控大局。',
+    roles: [
+      { tag: '【铁血猛0】如果你是 0', roleClass: 'r0', text: '全网最可惜的帅哥！外面是气场两米八的霸道总裁，回家居然喜欢躺平。谁能睡到你，真的成就感爆棚！' },
+      { tag: '【好胜心极强】如果你是 0.5', roleClass: 'r05', text: '因为性格太强势，就算当受也像是在"视察工作"。在家里必须说了算，一般人根本压不住你。' },
+      { tag: '【天选神1】如果你是 1', roleClass: 'r1', text: '从头到脚、从里到外都是纯铁大总攻。责任感爆棚，只要认定你，就一辈子为你遮风挡雨，安全感拉满！' }
+    ]
+  }
+};
+
+let currentQ = 0;
+let scores = [];
+const totalQuestions = 10;
+
+function startTest() {
+  currentQ = 0;
+  scores = [];
+  document.getElementById('startPage').style.display = 'none';
+  document.getElementById('resultPage').classList.remove('active');
+  document.getElementById('resultPage').innerHTML = '';
+  renderQuestion();
+}
+
+function renderQuestion() {
+  const q = questions[currentQ];
+  const progress = ((currentQ) / totalQuestions * 100).toFixed(0);
+  const qNum = currentQ + 1;
+
+  let html = `
+    <div class="question-page active fade-in" id="qPage">
+      <div class="progress-text">第 ${qNum} / ${totalQuestions} 题</div>
+      <div class="progress-bar"><div class="progress-fill" style="width:${progress}%"></div></div>
+      <div class="question-number">Q${qNum}</div>
+      <div class="question-text">${q.q}</div>`;
+
+  q.options.forEach((opt, i) => {
+    html += `<div class="option" onclick="selectOption(this, ${opt.score})">${String.fromCharCode(65 + i)}. ${opt.text}</div>`;
+  });
+
+  html += `</div>`;
+  document.getElementById('questionContainer').innerHTML = html;
+}
+
+function selectOption(el, score) {
+  const page = document.getElementById('qPage');
+  page.querySelectorAll('.option').forEach(o => o.classList.remove('selected'));
+  el.classList.add('selected');
+  scores.push(score);
+  setTimeout(() => {
+    currentQ++;
+    if (currentQ < totalQuestions) {
+      renderQuestion();
+    } else {
+      showResult();
+    }
+  }, 350);
+}
+
+function showResult() {
+  document.getElementById('questionContainer').innerHTML = '';
+
+  const avg = scores.reduce((a, b) => a + b, 0) / scores.length;
+  const rounded = Math.round(avg * 10) / 10;
+  const scoreFixed = rounded.toFixed(1);
+
+  // 确定档位
+  let tierKey;
+  if (rounded <= 0.2)      { tierKey = '0-0.2'; }
+  else if (rounded <= 0.4) { tierKey = '0.3-0.4'; }
+  else if (rounded <= 0.6) { tierKey = '0.5'; }
+  else if (rounded <= 0.8) { tierKey = '0.6-0.7'; }
+  else                       { tierKey = '0.8-1.0'; }
+
+  const result = resultMap[tierKey];
+
+  // 构建结果页
+  let html = `<div class="fade-in" id="screenshotArea">`;
+
+  // 分数展示
+  html += `
+    <div class="score-display">
+      <div class="score-number">${scoreFixed}</div>
+      <div class="score-label">你的性格指数</div>
+    </div>`;
+
+  // 性格类型卡片
+  html += `
+    <div class="type-card ${result.color}">
+      <div class="type-header">
+        <span class="dot ${result.color}"></span>
+        ${result.emoji} ${result.title}
+      </div>
+      <div class="type-desc">${result.desc}</div>
+    </div>`;
+
+  // 三种角色描述（0 / 0.5 / 1）
+  html += `<div class="role-section">
+    <div class="role-section-title">不同状态下的你</div>`;
+
+  result.roles.forEach(r => {
+    html += `
+      <div class="role-card">
+        <div class="role-card-tag">
+          <span class="role-dot ${r.roleClass}"></span>
+          ${r.tag}
+        </div>
+        <div class="role-card-text">${r.text}</div>
+      </div>`;
+  });
+
+  html += `</div>`;
+
+  // 二维码关注区域
+  html += `
+    <div class="qr-section">
+      <div class="qr-title">📢 关注公众号「熊家子弟」获取更多内容</div>
+      <img class="qr-img" src="qr.jpg" alt="关注熊家子弟">
+      <div class="qr-hint">长按识别二维码 → 关注</div>
+    </div>`;
+
+  // 免责声明
+  html += `
+    <div class="disclaimer">
+      ⚠️ 本测试仅供娱乐，结果不代表真实性格或性取向。<br>
+      每个人都是独特的，标签只是参考，不用太认真～
+    </div>`;
+
+  // 按钮区
+  html += `
+    <button class="share-btn" onclick="shareResult()">📷 生成分享图片</button>
+    <button class="btn" onclick="restartTest()" style="width:100%; margin-bottom:4px;">再测一次</button>
+    <div style="text-align:center; font-size:12px; color:#555; margin-top:8px;">分享给朋友，看看你们的分数差多少～</div>`;
+
+  html += `</div>`;
+
+  document.getElementById('resultPage').innerHTML = html;
+  document.getElementById('resultPage').classList.add('active');
+  window.scrollTo({ top: 0, behavior: 'smooth' });
+}
+
+function restartTest() {
+  document.getElementById('resultPage').classList.remove('active');
+  document.getElementById('resultPage').innerHTML = '';
+  document.getElementById('startPage').style.display = 'block';
+  window.scrollTo({ top: 0, behavior: 'smooth' });
+}
+
+// 分享截图功能 — 生成精简分享卡片
+async function shareResult() {
+  const btn = document.querySelector('.share-btn');
+  if (btn) { btn.textContent = '⏳ 正在生成图片...'; btn.style.pointerEvents = 'none'; }
+
+  // 先移除旧的分享卡片
+  const oldCard = document.getElementById('shareCard');
+  if (oldCard) oldCard.remove();
+
+  try {
+    // 从结果页读取当前数据
+    const scoreNum = document.querySelector('.score-number').textContent;
+    const typeHeader = document.querySelector('.type-header').textContent.trim();
+    const typeDesc = document.querySelector('.type-desc').textContent;
+
+    // 创建分享卡片 DOM
+    const card = document.createElement('div');
+    card.id = 'shareCard';
+    card.className = 'share-card';
+    card.innerHTML = `
+      <div class="share-card-header">
+        <div class="share-card-emoji">🐻</div>
+        <div class="share-card-title">性格攻受测试</div>
+      </div>
+      <div class="share-card-score">${scoreNum}</div>
+      <div class="share-card-type">${typeHeader}</div>
+      <div class="share-card-desc">${typeDesc}</div>
+      <div class="share-card-divider"></div>
+      <div class="share-card-qr">
+        <img src="qr.jpg" alt="关注熊家子弟">
+        <div class="share-card-qr-text">扫码关注「熊家子弟」</div>
+      </div>
+      <div class="share-card-footer">长按识别二维码关注公众号</div>
+    `;
+    document.body.appendChild(card);
+
+    // 截图
+    const canvas = await html2canvas(card, {
+      backgroundColor: '#16213e',
+      scale: 2,
+      useCORS: true,
+      logging: false
+    });
+
+    const imgData = canvas.toDataURL('image/jpeg', 0.95);
+
+    // 创建预览遮罩
+    const overlay = document.createElement('div');
+    overlay.className = 'share-overlay';
+    overlay.innerHTML = `
+      <img src="${imgData}" alt="测试结果">
+      <div class="share-tip">👆 长按图片保存到相册，分享给朋友</div>
+      <button class="close-overlay" onclick="this.parentElement.remove()">关闭</button>
+    `;
+    document.body.appendChild(overlay);
+
+    overlay.addEventListener('click', function(e) {
+      if (e.target === overlay) overlay.remove();
+    });
+  } catch (err) {
+    alert('生成图片失败，请重试：' + err.message);
+  }
+
+  if (btn) { btn.textContent = '📷 生成分享图片'; btn.style.pointerEvents = ''; }
+}
+</script>
+</body>
+</html>
